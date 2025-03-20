@@ -21,12 +21,14 @@ const sketch = (p5) => {
         });
     };
     p5.draw = () => {
+        const tiltVector = p5.createVector(p5.rotationX, p5.rotationY).normalize();
         p5.background("#e0e0e0");
         p5.textFont("monospace", 16);
         p5.textAlign("left", "top");
         p5.noStroke();
         p5.fill("#000000");
-        p5.text(`z: ${p5.rotationZ}\nx: ${p5.rotationX}\ny: ${p5.rotationY}`, 5, 5);
+        p5.text(`angle: ${Math.floor(p5.degrees(tiltVector.heading()))}\n` +
+            `magnitude: ${tiltVector.mag().toPrecision()}`, 5, 5);
     };
     function keyPressed(event) {
         console.log(event);
