@@ -1,0 +1,14 @@
+const CONFIG = {
+    SCREEN_WIDTH: 800,
+    SCREEN_HEIGHT: 600,
+    DISABLE_RIGHT_CLICK_MENU: true,
+    GYRO_INNER_DEADZONE: 0.15,
+    GYRO_OUTER_DEADZONE: 0.05,
+    GRID_SIZE: 50,
+    MAX_GRAVITY: 1200,
+    BALL_RADIUS: 20,
+    BALL_ELASTICITY: 0.25,
+    BALL_TERMINAL_VELOCITY: Infinity,
+};
+export default CONFIG;
+//# sourceMappingURL=config.js.map

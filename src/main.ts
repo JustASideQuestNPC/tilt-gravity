@@ -5,16 +5,13 @@
  */
 
 // sketch.json holds configurations for the canvas size and a few input things
-import { SKETCH_CONFIG } from "../config/sketchConfig.js";
+import CONFIG from "../config/config.js";
 import { addCanvasListeners } from "./listener-generator.js";
-
-let alpha: number;
-let beta: number;
-let gamma: number;
+import Physics from "./physics.js";
 
 const sketch = (p5: p5) => {
     p5.setup = () => {
-        const canvas = p5.createCanvas(SKETCH_CONFIG.SCREEN_WIDTH, SKETCH_CONFIG.SCREEN_HEIGHT);
+        const canvas = p5.createCanvas(CONFIG.SCREEN_WIDTH, CONFIG.SCREEN_HEIGHT);
 
         addCanvasListeners({
             canvas: canvas,
@@ -25,24 +22,24 @@ const sketch = (p5: p5) => {
             mouseReleased: mouseReleased
         });
 
-        window.addEventListener("deviceorientation", (e) => {
-            alpha = e.alpha;
-            beta = e.beta;
-            gamma = e.gamma;
-        });
+        Physics.init(p5);
     };
 
     p5.draw = () => {
-        const tiltVector = p5.createVector(p5.rotationX, p5.rotationY).normalize();
+        // native delta time is in milliseconds
+        // const tiltVector = p5.createVector(p5.rotationX / 90, p5.rotationY / 90).limit(1);
+        Physics.update(p5.deltaTime / 1000, p5.rotationX / 90, p5.rotationY / 90);
 
         p5.background("#e0e0e0");
+        Physics.render();
 
-        p5.textFont("monospace", 16);
-        p5.textAlign("left", "top");
-        p5.noStroke();
-        p5.fill("#000000");
-        p5.text(`angle: ${Math.floor(p5.degrees(tiltVector.heading()))}\n` +
-                `magnitude: ${tiltVector.mag().toPrecision()}`, 5, 5);
+    //     p5.stroke("#000000");
+    //     p5.strokeWeight(5);
+    //     p5.line(
+    //         p5.width / 2, p5.height / 2,
+    //         p5.width / 2 + tiltVector.y * 250,
+    //         p5.height / 2 + tiltVector.x * 250
+    //     );
     };
 
     function keyPressed(event: KeyboardEvent) {
