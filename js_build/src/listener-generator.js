@@ -1,4 +1,4 @@
-export function addCanvasListeners({ canvas, disableContextMenu = true, keyPressed, keyReleased, mousePressed, mouseReleased }) {
+export function addCanvasListeners({ canvas, disableContextMenu = true, keyPressed, keyReleased, mousePressed, mouseReleased, doubleClick }) {
     if (keyPressed || keyReleased || mousePressed || mouseReleased || disableContextMenu) {
         const c = document.getElementById(canvas.id());
         c.tabIndex = -1;
@@ -13,6 +13,9 @@ export function addCanvasListeners({ canvas, disableContextMenu = true, keyPress
         }
         if (keyReleased) {
             c.addEventListener("keyup", keyReleased);
+        }
+        if (doubleClick) {
+            c.addEventListener("dblclick", doubleClick);
         }
         if (disableContextMenu) {
             c.addEventListener("contextmenu", e => e.preventDefault());

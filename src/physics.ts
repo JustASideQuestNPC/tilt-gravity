@@ -13,9 +13,17 @@ interface BoundingBox {
     height: number
 }
 
+interface Wall {
+    x: number,
+    y: number,
+    bbox: BoundingBox
+};
+
 let p5: p5;
 let ball: Ball;
-let walls: BoundingBox[];
+let walls: Wall[] = [];
+
+const wallMap: boolean[][] = [];
 
 /**
  * Applies deadzone to an analog value. Both the input and output are between -1 and 1.
@@ -104,10 +112,20 @@ namespace Physics {
             velocity: p5.createVector(0, 0),
             radius: CONFIG.BALL_RADIUS
         };
-        walls = [
-            { x: 150, y: 500, width: 50, height: 50 },
-            { x: 150, y: 550, width: 50, height: 50 },
-        ];
+        
+        // setup wall map
+        const numRows = Math.floor(p5.height / CONFIG.GRID_SIZE);
+        const numColumns = Math.floor(p5.width / CONFIG.GRID_SIZE);
+        for (let x = 0; x < numColumns; ++x) {
+            wallMap.push(Array(numColumns).fill(false, numRows));
+        }
+    }
+    export function reset() {
+        ball = {
+            position: p5.createVector(p5.width / 2, p5.height / 2),
+            velocity: p5.createVector(0, 0),
+            radius: CONFIG.BALL_RADIUS
+        };
     }
     export function update(dt: number, xAngle: number, yAngle: number) {
         // find gravitational acceleration on this frame
@@ -140,7 +158,7 @@ namespace Physics {
         // collide with walls
         const transVec = p5.createVector(); // trans rights!
         for (const wall of walls) {
-            if (circleRectCollision(ball, wall, transVec)) {
+            if (circleRectCollision(ball, wall.bbox, transVec)) {
                 ball.position.add(transVec);
                 
 
@@ -153,15 +171,48 @@ namespace Physics {
                 );
             }
         }
+
+        // snap very small values to 0
+        if (ball.velocity.magSq() < 1) {
+            ball.velocity.set(0, 0);
+        }
+        // apply friction
+        else {
+            ball.velocity.mult(1 - CONFIG.BALL_FRICTION * dt);
+        }
     }
     export function render() {
         p5.noStroke();
         p5.fill("#000000");
         for (const wall of walls) {
-            p5.rect(wall.x, wall.y, wall.width, wall.height);
+            p5.rect(wall.bbox.x, wall.bbox.y, wall.bbox.width, wall.bbox.height);
         }
         p5.fill("#f54242");
         p5.circle(ball.position.x, ball.position.y, ball.radius * 2);
+    }
+    export function toggleWall(x: number, y: number) {
+        let i = 0;
+        for (; i < walls.length; ++i) {
+            if (walls[i].x === x && walls[i].y === y) {
+                break;
+            }
+        }
+        
+        if (i !== walls.length) {
+            walls.splice(i, 1);
+        }
+        else {
+            walls.push({
+                x: x,
+                y: y,
+                bbox: {
+                    x: x * CONFIG.GRID_SIZE,
+                    y: y * CONFIG.GRID_SIZE,
+                    width: CONFIG.GRID_SIZE,
+                    height: CONFIG.GRID_SIZE
+                }
+            });
+        }
     }
 }
 export default Physics;

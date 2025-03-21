@@ -1,7 +1,9 @@
 import CONFIG from "../config/config.js";
+;
 let p5;
 let ball;
-let walls;
+let walls = [];
+const wallMap = [];
 function applyDeadzone(value, inner, outer) {
     if (Math.abs(value) < inner) {
         return 0;
@@ -80,12 +82,21 @@ var Physics;
             velocity: p5.createVector(0, 0),
             radius: CONFIG.BALL_RADIUS
         };
-        walls = [
-            { x: 150, y: 500, width: 50, height: 50 },
-            { x: 150, y: 550, width: 50, height: 50 },
-        ];
+        const numRows = Math.floor(p5.height / CONFIG.GRID_SIZE);
+        const numColumns = Math.floor(p5.width / CONFIG.GRID_SIZE);
+        for (let x = 0; x < numColumns; ++x) {
+            wallMap.push(Array(numColumns).fill(false, numRows));
+        }
     }
     Physics.init = init;
+    function reset() {
+        ball = {
+            position: p5.createVector(p5.width / 2, p5.height / 2),
+            velocity: p5.createVector(0, 0),
+            radius: CONFIG.BALL_RADIUS
+        };
+    }
+    Physics.reset = reset;
     function update(dt, xAngle, yAngle) {
         const gravity = p5.createVector(applyDeadzone(yAngle, CONFIG.GYRO_INNER_DEADZONE, CONFIG.GYRO_OUTER_DEADZONE), applyDeadzone(xAngle, CONFIG.GYRO_INNER_DEADZONE, CONFIG.GYRO_OUTER_DEADZONE)).limit(1).mult(CONFIG.MAX_GRAVITY * dt * 0.1);
         ball.velocity.add(gravity).limit(CONFIG.BALL_TERMINAL_VELOCITY);
@@ -108,12 +119,18 @@ var Physics;
         }
         const transVec = p5.createVector();
         for (const wall of walls) {
-            if (circleRectCollision(ball, wall, transVec)) {
+            if (circleRectCollision(ball, wall.bbox, transVec)) {
                 ball.position.add(transVec);
                 transVec.normalize();
                 const k = 2 * (ball.velocity.x * transVec.x + ball.velocity.y * transVec.y);
                 ball.velocity.set((ball.velocity.x - k * transVec.x) * CONFIG.BALL_ELASTICITY, (ball.velocity.y - k * transVec.y) * CONFIG.BALL_ELASTICITY);
             }
+        }
+        if (ball.velocity.magSq() < 1) {
+            ball.velocity.set(0, 0);
+        }
+        else {
+            ball.velocity.mult(1 - CONFIG.BALL_FRICTION * dt);
         }
     }
     Physics.update = update;
@@ -121,12 +138,36 @@ var Physics;
         p5.noStroke();
         p5.fill("#000000");
         for (const wall of walls) {
-            p5.rect(wall.x, wall.y, wall.width, wall.height);
+            p5.rect(wall.bbox.x, wall.bbox.y, wall.bbox.width, wall.bbox.height);
         }
         p5.fill("#f54242");
         p5.circle(ball.position.x, ball.position.y, ball.radius * 2);
     }
     Physics.render = render;
+    function toggleWall(x, y) {
+        let i = 0;
+        for (; i < walls.length; ++i) {
+            if (walls[i].x === x && walls[i].y === y) {
+                break;
+            }
+        }
+        if (i !== walls.length) {
+            walls.splice(i, 1);
+        }
+        else {
+            walls.push({
+                x: x,
+                y: y,
+                bbox: {
+                    x: x * CONFIG.GRID_SIZE,
+                    y: y * CONFIG.GRID_SIZE,
+                    width: CONFIG.GRID_SIZE,
+                    height: CONFIG.GRID_SIZE
+                }
+            });
+        }
+    }
+    Physics.toggleWall = toggleWall;
 })(Physics || (Physics = {}));
 export default Physics;
 //# sourceMappingURL=physics.js.map
